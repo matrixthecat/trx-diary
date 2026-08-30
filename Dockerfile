@@ -9,7 +9,7 @@ COPY app.py schema.sql ./
 COPY static ./static
 COPY templates ./templates
 
-RUN useradd --create-home appuser && mkdir /data && chown appuser:appuser /data
+RUN useradd --create-home appuser && mkdir /data && chown -R appuser:appuser /app /data
 
 ENV PYTHONUNBUFFERED=1 \
     TRX_DATA_DIR=/data
