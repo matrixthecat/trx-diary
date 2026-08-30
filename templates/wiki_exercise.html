@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+  <h2>Scheda esercizio: {{ exercise_name }}</h2>
+  {% if exercise_name not in routine_exercises %}
+  <form method="post" action="{{ url_for('wiki_rename_exercise') }}" class="compact-form">
+    <input type="hidden" name="current_name" value="{{ exercise_name }}">
+    <label>Nome esercizio
+      <input type="text" name="new_name" value="{{ exercise_name }}" required>
+    </label>
+    <button type="submit" class="small-btn">Rinomina esercizio</button>
+  </form>
+  <form method="post" action="{{ url_for('wiki_delete_exercise') }}" onsubmit="return confirm('Eliminare questa scheda dalla Wiki?');" class="compact-form">
+    <input type="hidden" name="exercise_name" value="{{ exercise_name }}">
+    <button type="submit" class="small-btn danger">Elimina esercizio</button>
+  </form>
+  {% endif %}
+  <form method="post" action="{{ url_for('wiki_save_exercise') }}">
+    <input type="hidden" name="exercise_name" value="{{ exercise_name }}">
+    <label>Descrizione tecnica
+      <textarea name="description" rows="4" placeholder="Esecuzione corretta, focus muscolare, errori comuni...">{{ wiki['description'] }}</textarea>
+    </label>
+    <label>Commento personale
+      <textarea name="personal_comment" rows="4" placeholder="Sensazioni, limiti, obiettivo personale...">{{ wiki['personal_comment'] }}</textarea>
+    </label>
+    <button type="submit">Salva scheda</button>
+  </form>
+</section>
+
+<section class="grid-two">
+  <article class="card">
+    <h3>Foto (max 4)</h3>
+    <form method="post" action="{{ url_for('wiki_upload_photo') }}" enctype="multipart/form-data">
+      <input type="hidden" name="exercise_name" value="{{ exercise_name }}">
+      <label>Titolo foto
+        <input type="text" name="title" placeholder="Es: setup corretto">
+      </label>
+      <label>File immagine
+        <input type="file" name="photo" accept="image/*" {% if max_photos_reached %}disabled{% endif %}>
+      </label>
+      <button type="submit" {% if max_photos_reached %}disabled{% endif %}>Carica foto</button>
+    </form>
+    {% if max_photos_reached %}
+    <p class="hint">Hai raggiunto il limite di 4 foto.</p>
+    {% endif %}
+
+    <div class="media-grid">
+      {% for photo in photos %}
+      <article class="media-card">
+        <img src="{{ url_for('serve_uploaded_photo', filename=photo['media_path']) }}" alt="{{ photo['title'] or 'foto esercizio' }}">
+        <form method="post" action="{{ url_for('wiki_update_media', media_id=photo['id']) }}" class="compact-form">
+          <input type="text" name="title" value="{{ photo['title'] }}" placeholder="Titolo foto">
+          <button type="submit" class="small-btn">Aggiorna titolo</button>
+        </form>
+        <form method="post" action="{{ url_for('wiki_replace_media_file', media_id=photo['id']) }}" enctype="multipart/form-data" class="compact-form">
+          <input type="file" name="replacement_file" accept="image/*" required>
+          <button type="submit" class="small-btn">Sostituisci file</button>
+        </form>
+        <form method="post" action="{{ url_for('wiki_delete_media', media_id=photo['id']) }}" onsubmit="return confirm('Eliminare questa foto?');" class="compact-form">
+          <button type="submit" class="small-btn danger">Elimina</button>
+        </form>
+      </article>
+      {% else %}
+      <p>Nessuna foto caricata.</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>Video</h3>
+    <form method="post" action="{{ url_for('wiki_add_video_link') }}" class="compact-form">
+      <input type="hidden" name="exercise_name" value="{{ exercise_name }}">
+      <label>Titolo link video
+        <input type="text" name="title" placeholder="Es: tutorial YouTube">
+      </label>
+      <label>URL video
+        <input type="url" name="video_url" placeholder="https://..." required>
+      </label>
+      <button type="submit">Aggiungi link video</button>
+    </form>
+
+    <form method="post" action="{{ url_for('wiki_upload_video_file') }}" enctype="multipart/form-data" class="compact-form">
+      <input type="hidden" name="exercise_name" value="{{ exercise_name }}">
+      <label>Titolo video locale
+        <input type="text" name="title" placeholder="Es: mia esecuzione">
+      </label>
+      <label>File video (salvato in video_esplicativi)
+        <input type="file" name="video_file" accept="video/*" required>
+      </label>
+      <button type="submit">Carica video locale</button>
+    </form>
+
+    <h4 class="subhead">Link video</h4>
+    <div class="stack-list">
+      {% for video in video_links %}
+      <article class="media-card">
+        <a class="inline-link" href="{{ video['media_path'] }}" target="_blank" rel="noopener">{{ video['title'] or video['media_path'] }}</a>
+        <form method="post" action="{{ url_for('wiki_update_media', media_id=video['id']) }}" class="compact-form">
+          <input type="text" name="title" value="{{ video['title'] }}" placeholder="Titolo">
+          <input type="url" name="media_path" value="{{ video['media_path'] }}" required>
+          <button type="submit" class="small-btn">Aggiorna link</button>
+        </form>
+        <form method="post" action="{{ url_for('wiki_delete_media', media_id=video['id']) }}" onsubmit="return confirm('Eliminare questo link video?');" class="compact-form">
+          <button type="submit" class="small-btn danger">Elimina</button>
+        </form>
+      </article>
+      {% else %}
+      <p>Nessun link video associato.</p>
+      {% endfor %}
+    </div>
+
+    <h4 class="subhead">Video locali</h4>
+    <div class="stack-list">
+      {% for video in video_files %}
+      <article class="media-card">
+        <video controls preload="metadata" src="{{ url_for('serve_local_video', filename=video['media_path']) }}"></video>
+        <p>{{ video['title'] or video['media_path'] }}</p>
+        <form method="post" action="{{ url_for('wiki_update_media', media_id=video['id']) }}" class="compact-form">
+          <input type="text" name="title" value="{{ video['title'] }}" placeholder="Titolo">
+          <button type="submit" class="small-btn">Aggiorna titolo</button>
+        </form>
+        <form method="post" action="{{ url_for('wiki_replace_media_file', media_id=video['id']) }}" enctype="multipart/form-data" class="compact-form">
+          <input type="file" name="replacement_file" accept="video/*" required>
+          <button type="submit" class="small-btn">Sostituisci file</button>
+        </form>
+        <form method="post" action="{{ url_for('wiki_delete_media', media_id=video['id']) }}" onsubmit="return confirm('Eliminare questo video locale?');" class="compact-form">
+          <button type="submit" class="small-btn danger">Elimina</button>
+        </form>
+      </article>
+      {% else %}
+      <p>Nessun video locale associato.</p>
+      {% endfor %}
+    </div>
+  </article>
+</section>
+{% endblock %}

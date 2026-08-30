@@ -1,0 +1,21 @@
+FROM python:3.12-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app.py schema.sql ./
+COPY static ./static
+COPY templates ./templates
+
+RUN useradd --create-home appuser && mkdir /data && chown appuser:appuser /data
+
+ENV PYTHONUNBUFFERED=1 \
+    TRX_DATA_DIR=/data
+
+USER appuser
+
+EXPOSE 5001
+
+CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "1", "--threads", "4", "app:app"]

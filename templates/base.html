@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TRX Training Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="hero">
+    <h1>TRX Training Tracker</h1>
+    <p>Registro personale: allenamenti, volume ripetizioni e metriche settimanali.</p>
+    {% if session.get('authenticated') %}
+    <div class="header-actions">
+      <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Apri menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="main-nav" id="main-nav">
+        <a href="{{ url_for('index') }}">Dashboard</a>
+        <a href="{{ url_for('wiki_index') }}">Wiki Esercizi</a>
+        <a href="{{ url_for('routine_config') }}">Configurazione routine</a>
+        <a href="{{ url_for('workout_today') }}">Avvia Allenamento di Oggi</a>
+      </nav>
+      <form method="post" action="{{ url_for('logout') }}" class="logout-form">
+        <button type="submit" class="danger">Logout</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+  <main class="container">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <section class="flash-wrap">
+        {% for message in messages %}
+        <p class="flash-message">{{ message }}</p>
+        {% endfor %}
+      </section>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

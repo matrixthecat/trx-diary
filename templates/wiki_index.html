@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+  <h2>Wiki Esercizi</h2>
+  <p>Apri una scheda per aggiungere descrizione tecnica, commenti personali, foto (max 4), link video e video locali.</p>
+  <form method="post" action="{{ url_for('wiki_add_exercise') }}" class="compact-form">
+    <label>Nuovo esercizio
+      <input type="text" name="exercise_name" placeholder="Es: Rematore con manubrio" required>
+    </label>
+    <button type="submit">Aggiungi esercizio</button>
+  </form>
+</section>
+
+<section class="wiki-grid">
+  {% for item in wiki_cards %}
+  <article class="card wiki-card">
+    <h3>{{ item['exercise_name'] }}</h3>
+    <p class="wiki-line"><strong>Descrizione:</strong> {{ item['description'][:120] if item['description'] else 'Nessuna descrizione.' }}</p>
+    <p class="wiki-line"><strong>Commento:</strong> {{ item['personal_comment'][:120] if item['personal_comment'] else 'Nessun commento personale.' }}</p>
+    <p class="wiki-meta">Foto: {{ item['photo_count'] }} | Link video: {{ item['link_count'] }} | Video locali: {{ item['file_video_count'] }}</p>
+    <a class="inline-link" href="{{ url_for('wiki_exercise', name=item['exercise_name']) }}">Apri scheda</a>
+    {% if item['exercise_name'] not in routine_exercises %}
+    <form method="post" action="{{ url_for('wiki_delete_exercise') }}" onsubmit="return confirm('Eliminare questo esercizio dalla Wiki?');" class="compact-form">
+      <input type="hidden" name="exercise_name" value="{{ item['exercise_name'] }}">
+      <button type="submit" class="small-btn danger">Elimina esercizio</button>
+    </form>
+    {% endif %}
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+services:
+  trx-training-tracker:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      TRX_SECRET_KEY: ${TRX_SECRET_KEY:-change-this-secret-key}
+      TRX_APP_PIN: ${TRX_APP_PIN:-1234}
+    volumes:
+      - trx-data:/data
+    restart: unless-stopped
+
+volumes:
+  trx-data:

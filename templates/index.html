@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="stats-grid">
+  <article class="card stat">
+    <h2>Sessioni registrate</h2>
+    <p class="value">{{ total_sessions }}</p>
+  </article>
+  <article class="card stat">
+    <h2>Ripetizioni totali</h2>
+    <p class="value">{{ total_reps }}</p>
+  </article>
+</section>
+
+<section class="grid-two">
+  <article class="card">
+    <h2>Nuovo allenamento</h2>
+    <form method="post" action="{{ url_for('add_workout') }}" id="workout-form">
+      <label>Data allenamento
+        <input type="date" name="workout_date" id="workout-date" value="{{ today }}" required>
+      </label>
+      <label>Giorno routine
+        <select name="day_name" id="day-select" required>
+          {% for day in routine.keys() %}
+          <option value="{{ day }}">{{ day }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>Esercizio
+        <select name="exercise" id="exercise-select" required></select>
+      </label>
+      <div class="inline-fields">
+        <label>Serie
+          <input type="number" min="1" name="sets_completed" value="3" required>
+        </label>
+        <label>Rip per serie
+          <input type="number" min="1" name="reps_completed" value="10" required>
+        </label>
+      </div>
+      <label>Note
+        <textarea name="notes" rows="3" placeholder="Percezione sforzo, varianti, fastidi..."></textarea>
+      </label>
+      <button type="submit">Salva allenamento</button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h2>Metriche settimanali</h2>
+    <form method="post" action="{{ url_for('add_metric') }}">
+      <label>Settimana (lunedi)
+        <input type="date" name="week_start" id="week-start" required>
+      </label>
+      <div class="inline-fields">
+        <label>Peso (kg)
+          <input type="number" step="0.1" min="1" name="weight_kg" required>
+        </label>
+        <label>Altezza (cm)
+          <input type="number" step="0.1" min="1" name="height_cm" required>
+        </label>
+      </div>
+      <label>Note
+        <textarea name="metric_notes" rows="3" placeholder="Es: settimana stressante, sonno basso..."></textarea>
+      </label>
+      <button type="submit">Salva metriche</button>
+    </form>
+
+    <h3 class="subhead">Sicurezza</h3>
+    <form method="post" action="{{ url_for('change_pin') }}" class="compact-form">
+      <div class="inline-fields">
+        <label>PIN attuale
+          <input type="password" name="current_pin" inputmode="numeric" minlength="4" required>
+        </label>
+        <label>Nuovo PIN
+          <input type="password" name="new_pin" inputmode="numeric" minlength="4" required>
+        </label>
+      </div>
+      <button type="submit">Aggiorna PIN</button>
+    </form>
+  </article>
+</section>
+
+<section class="grid-two">
+  <article class="card">
+    <h2>Dashboard progressi</h2>
+    <canvas id="repsChart" height="180"></canvas>
+    <canvas id="weightChart" height="180"></canvas>
+  </article>
+
+  <article class="card">
+    <h2>Storico allenamenti</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Giorno</th>
+            <th>Esercizio</th>
+            <th>Serie</th>
+            <th>Rip</th>
+            <th>Totale</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in workout_logs %}
+          <tr>
+              <td><input type="date" name="workout_date" form="update-workout-{{ row['id'] }}" value="{{ row['workout_date'] }}" required></td>
+              <td>
+                <select name="day_name" form="update-workout-{{ row['id'] }}" required>
+                  {% for day in routine.keys() %}
+                  <option value="{{ day }}" {% if row['day_name'] == day %}selected{% endif %}>{{ day }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td><input type="text" name="exercise" form="update-workout-{{ row['id'] }}" value="{{ row['exercise'] }}" required></td>
+              <td><input type="number" name="sets_completed" form="update-workout-{{ row['id'] }}" min="1" value="{{ row['sets_completed'] }}" required></td>
+              <td><input type="number" name="reps_completed" form="update-workout-{{ row['id'] }}" min="1" value="{{ row['reps_completed'] }}" required></td>
+              <td>{{ row['total_reps'] }}</td>
+              <td class="actions-cell">
+                <form id="update-workout-{{ row['id'] }}" method="post" action="{{ url_for('update_workout', workout_id=row['id']) }}">
+                  <button type="submit" class="small-btn">Salva</button>
+                </form>
+                <form method="post" action="{{ url_for('delete_workout', workout_id=row['id']) }}" onsubmit="return confirm('Eliminare questo allenamento?');">
+                  <button type="submit" class="small-btn danger">Elimina</button>
+                </form>
+              </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7">Nessun allenamento registrato.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="subhead">Storico metriche</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Settimana</th>
+            <th>Peso (kg)</th>
+            <th>Altezza (cm)</th>
+            <th>Azioni</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in weekly_metrics %}
+          <tr>
+              <td><input type="date" name="week_start" form="update-metric-{{ row['id'] }}" value="{{ row['week_start'] }}" required></td>
+              <td><input type="number" name="weight_kg" form="update-metric-{{ row['id'] }}" step="0.1" min="1" value="{{ row['weight_kg'] }}" required></td>
+              <td><input type="number" name="height_cm" form="update-metric-{{ row['id'] }}" step="0.1" min="1" value="{{ row['height_cm'] }}" required></td>
+              <td class="actions-cell">
+                <form id="update-metric-{{ row['id'] }}" method="post" action="{{ url_for('update_metric', metric_id=row['id']) }}">
+                  <button type="submit" class="small-btn">Salva</button>
+                </form>
+                <form method="post" action="{{ url_for('delete_metric', metric_id=row['id']) }}" onsubmit="return confirm('Eliminare queste metriche?');">
+                  <button type="submit" class="small-btn danger">Elimina</button>
+                </form>
+              </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="4">Nessuna metrica registrata.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<script id="routine-data" type="application/json">{{ routine|tojson }}</script>
+{% endblock %}

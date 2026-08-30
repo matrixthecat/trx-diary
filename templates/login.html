@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="login-shell">
+  <article class="card login-card">
+    <h2>Accesso con PIN</h2>
+    <p>Inserisci il PIN personale per aprire il registro allenamenti.</p>
+    <form method="post" action="{{ url_for('login') }}">
+      <label>PIN
+        <input type="password" name="pin" inputmode="numeric" minlength="4" required>
+      </label>
+      <button type="submit">Entra</button>
+    </form>
+    <p class="hint">PIN iniziale: 1234 (se non personalizzato con variabile TRX_APP_PIN).</p>
+  </article>
+</section>
+{% endblock %}

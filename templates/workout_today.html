@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+  <h2>Allenamento di oggi</h2>
+  <p><strong>Data:</strong> {{ today }} | <strong>Giorno routine:</strong> {{ day_name }}</p>
+</section>
+
+<section class="grid-two">
+  <article class="card">
+    <h3>Timer sessione</h3>
+    <div class="timer-box">
+      <p id="timer-display">00:00</p>
+      <div class="timer-actions">
+        <button type="button" id="timer-start">Start</button>
+        <button type="button" id="timer-pause">Pausa</button>
+        <button type="button" id="timer-reset" class="danger">Reset</button>
+      </div>
+      <label>Preset secondi
+        <input type="number" id="timer-seconds" min="10" step="10" value="60">
+      </label>
+      <button type="button" id="timer-apply" class="small-btn">Applica preset</button>
+    </div>
+
+    <h3 class="subhead">Checklist completamento</h3>
+    <div class="checklist">
+      {% for item in checklist %}
+      <label class="check-item">
+        <input
+          type="checkbox"
+          class="completion-check"
+          data-exercise="{{ item['exercise'] }}"
+          data-date="{{ today }}"
+          {% if item['completed'] %}checked{% endif %}
+        >
+        <span>{{ item['exercise'] }}{% if item['media_count'] > 0 %} ({{ item['media_count'] }} media){% endif %}</span>
+      </label>
+      {% else %}
+      <p>Nessun esercizio previsto oggi. Controlla la configurazione della routine o aggiungi un esercizio per questo giorno.</p>
+      <p><a href="{{ url_for('routine_config') }}" class="small-btn">Apri configurazione routine</a></p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="card">
+    <h3>Video che scorrono</h3>
+    <p class="hint">La playlist passa automaticamente al contenuto successivo ogni 25 secondi. Puoi usare anche i tasti avanti/indietro.</p>
+
+    <div id="playlist-empty" {% if playlist|length > 0 %}style="display:none"{% endif %}>
+      Nessun video associato agli esercizi di oggi.
+    </div>
+
+    <div id="playlist-player" {% if playlist|length == 0 %}style="display:none"{% endif %}>
+      <p id="playlist-meta"></p>
+      <div id="playlist-stage"></div>
+      <div class="timer-actions">
+        <button type="button" id="playlist-prev" class="small-btn">Precedente</button>
+        <button type="button" id="playlist-next" class="small-btn">Successivo</button>
+      </div>
+    </div>
+  </article>
+</section>
+
+<script id="workout-playlist" type="application/json">{{ playlist|tojson }}</script>
+{% endblock %}

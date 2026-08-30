@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="card">
+  <h2>Configurazione esercizi</h2>
+  <p>Gestisci il catalogo degli esercizi e assegnali alle sessioni. Il nome è unico e viene usato sia nella routine sia nella Wiki.</p>
+  <p class="hint">Attiva <strong>Wiki</strong> per mostrare la scheda dell'esercizio nella sezione Wiki.</p>
+</section>
+
+<form method="post" action="{{ url_for('save_routine_config') }}">
+  <section class="card table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Nome esercizio</th>
+          <th>Wiki</th>
+          {% for day in day_names %}<th>{{ day }}</th>{% endfor %}
+          <th>Rimuovi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in catalog_rows %}
+        {% set index = loop.index0 %}
+        <tr>
+          <td>
+            <input type="hidden" name="old_name_{{ index }}" value="{{ row['exercise_name'] }}">
+            <input type="text" name="exercise_name_{{ index }}" value="{{ row['exercise_name'] }}" required>
+          </td>
+          <td><input type="checkbox" name="wiki_{{ index }}" value="1" {% if row['wiki'] %}checked{% endif %}></td>
+          {% for day in day_names %}
+          <td><input type="checkbox" name="day_{{ index }}_{{ day }}" value="1" {% if row['exercise_name'] in routine[day] %}checked{% endif %}></td>
+          {% endfor %}
+          <td><input type="checkbox" name="remove_{{ index }}" value="1"></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <input type="hidden" name="row_count" value="{{ catalog_rows|length }}">
+  </section>
+
+  <section class="card">
+    <h3>Nuovo esercizio</h3>
+    <div class="inline-fields">
+      <label>Nome
+        <input type="text" name="new_exercise_name" placeholder="Es: Rematore con manubrio">
+      </label>
+      <label>Wiki
+        <span><input type="checkbox" name="new_exercise_wiki" value="1" checked> Attiva scheda Wiki</span>
+      </label>
+    </div>
+    <p class="hint">Assegna subito il nuovo esercizio alle sessioni:</p>
+    <div class="timer-actions">
+      {% for day in day_names %}
+      <label><span><input type="checkbox" name="new_day_{{ day }}" value="1"> {{ day }}</span></label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <button type="submit">Salva configurazione</button>
+</form>
+{% endblock %}
